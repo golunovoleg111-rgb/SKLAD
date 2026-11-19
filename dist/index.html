@@ -1,9 +1,14 @@
-<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Склад — Этикетки</title><link rel="stylesheet" href="style.css"><body>
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="favicon.svg"><title>Склад — Этикетки</title><link rel="stylesheet" href="style.css"><body>
 <aside><div class="brand"><i data-icon="box"></i>СКЛАД<span> /</span></div><small>РАБОЧЕЕ МЕСТО</small><button id="navForm" class="active"><i data-icon="tag"></i> Этикетки</button><button id="navLog"><i data-icon="clock"></i> Журнал действий</button><footer><b>К</b><div>Кладовщик<small>Рабочее место</small></div></footer></aside>
 <main><header><span>Рабочее место <em>/</em> <strong id="crumb">Этикетки</strong></span><time></time></header><section id="editor"><div class="heading"><h1>Этикетки</h1><p>Подготовьте маркировку для коробок с товаром.</p></div>
 <div class="layout"><article><h2><i data-icon="sliders"></i>Параметры партии</h2><form id="form"><label>Модель изделия<input id="model" value="КБЖ№1" required maxlength="40"></label><div class="pair"><label>Номер заказа<input id="order" value="27" required maxlength="24"></label><label>Отправление<input id="shipment" value="2" required maxlength="24"></label></div>
 <fieldset><legend>Цвета изделия</legend><div id="chips"></div><div class="add"><input id="custom" maxlength="35" placeholder="Название цвета" aria-label="Название цвета"><button id="add" type="button">+ Добавить</button></div></fieldset>
 <fieldset><legend>Размерная сетка</legend><div id="sizes"></div></fieldset>
+<fieldset><legend>Формат термоэтикетки</legend><div class="formats">
+<label><input type="radio" name="height" value="40" checked>58 × 40 мм</label>
+<label><input type="radio" name="height" value="60">58 × 60 мм</label>
+<label><input type="radio" name="height" value="80">58 × 80 мм</label>
+</div></fieldset>
 <div class="sum" id="sum"></div><button class="primary"><i data-icon="download"></i>Скачать этикетки</button></form></article>
 <div><article class="preview"><h2><i data-icon="eye"></i>Предпросмотр</h2><div class="stage"><div id="sample"></div></div><div class="pager"><button id="prev" aria-label="Предыдущая этикетка">‹</button><span id="page"></span><button id="next" aria-label="Следующая этикетка">›</button></div><button id="print"><i data-icon="printer"></i>Печать партии</button></article><div class="note"><i data-icon="folder"></i><div><b>Архив по цветам</b><p>В каждом файле — этикетки одного цвета по выбранным размерам.</p></div></div></div></div></section>
 <section id="history" hidden><div class="heading"><h1>Журнал действий</h1><p>Скачивания и запросы печати в этом браузере.</p></div><article id="events"></article></section><p id="message" role="status"></p></main><div id="printArea"></div><script src="app.js"></script></body></html>

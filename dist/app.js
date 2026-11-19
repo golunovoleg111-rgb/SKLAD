@@ -12,7 +12,7 @@ const icons = {
 };
 document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[el.dataset.icon]+'</svg>');
 const palette={'Тёмно-синий':'#273951','Чёрный':'#292b30','Бежевый':'#cfbca2','Голубой':'#8bc0e3','Красный':'#ce5859'};
-const colors=Object.keys(palette), grid=Array.from({length:11},(_,i)=>40+i*2), sizes=new Set(grid);
+const colors=Object.keys(palette), grid=Array.from({length:15},(_,i)=>38+i*2), sizes=new Set(grid);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const value=id=>$(id).value.trim();
 const selected=()=>grid.filter(n=>sizes.has(n));
@@ -20,7 +20,8 @@ let cursor=0, events=[];
 try{const saved=JSON.parse(localStorage.getItem('sklad-log')||'[]');if(Array.isArray(saved))events=saved}catch{}
 document.querySelector('time').textContent=new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
 function ticket(color,size){
- return '<div class="ticket"><header><span>СКЛАД / ЭТИКЕТКА</span><span aria-hidden="true" class="bars"></span></header><div class="ticketbody"><div><div class="model">'+esc(value('model'))+'</div><div class="color">'+esc(color)+'</div><strong class="bigsize">'+size+' р.</strong></div><div class="sign"><div>Кол-во, шт.<div class="line"></div></div><div>Подпись<div class="line"></div></div></div></div><div class="ref">Заказ № '+esc(value('order'))+' · Отправление '+esc(value('shipment'))+'</div></div>';
+ const compact = value('model').length > 14 || color.length > 16 || value('order').length + value('shipment').length > 22;
+ return '<div class="ticket'+(compact?' compact':'')+'"><header><span>СКЛАД / ЭТИКЕТКА</span><span aria-hidden="true" class="bars"></span></header><div class="ticketbody"><div><div class="model">'+esc(value('model'))+'</div><div class="color">'+esc(color)+'</div><strong class="bigsize">'+size+' р.</strong></div><div class="sign"><div>Кол-во, шт.<div class="line"></div></div><div>Подпись<div class="line"></div></div></div></div><div class="ref">Заказ № '+esc(value('order'))+' · Отправление '+esc(value('shipment'))+'</div></div>';
 }
 function update(){
  const list=selected(), count=list.length*colors.length;
@@ -57,8 +58,43 @@ function showHistory(on){
  if(on)$('events').innerHTML=events.length?events.map(e=>'<div class="event"><b>'+esc(e.action)+'</b> · '+esc(e.model)+'<div>Заказ № '+esc(e.order)+' · Отправление '+esc(e.shipment)+' · Этикеток: '+esc(e.count)+'</div><small>'+esc(new Date(e.date).toLocaleString('ru-RU'))+'</small></div>').join(''):'Действий пока нет.';
 }
 $('navForm').onclick=()=>showHistory(false);$('navLog').onclick=()=>showHistory(true);
-const printStyles='@page{size:A4;margin:10mm}.sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:3mm}.ticket{box-sizing:border-box;border:1px dashed #666;padding:4mm;break-inside:avoid;font:14px Arial,sans-serif;overflow-wrap:anywhere;color:#111;background:white}.ticket header{display:flex;justify-content:space-between;height:auto;border:0;border-bottom:1px solid;padding:0 0 2mm;margin:0 0 3mm;font:bold 11px monospace;color:#111}.ticketbody{display:grid;grid-template-columns:1.2fr 1fr;gap:3mm}.model{font-size:24px;font-weight:bold}.color{margin:2mm 0}.bigsize{font-size:22px}.sign{border-left:1px dashed #888;padding-left:3mm;display:flex;flex-direction:column;justify-content:space-around;font-size:12px}.line{height:5mm;border-bottom:1px solid}.ref{border-top:1px solid;margin-top:3mm;padding-top:2mm;font:12px monospace}.bars{width:12mm;height:4mm;background:repeating-linear-gradient(90deg,#111 0 2px,transparent 2px 4px);print-color-adjust:exact}';
-const style=document.createElement('style');style.media='print';style.textContent='body{background:white;margin:0}body>aside,body>main{display:none}#printArea{display:block}'+printStyles;document.head.append(style);
+const labelStyle = document.createElement('style');
+document.head.append(labelStyle);
+function thermalStyles() {
+ const height = Number(document.querySelector('input[name="height"]:checked').value);
+ return `
+ @page { size: 58mm ${height}mm; margin: 0; }
+ .ticket { width:58mm; height:${height}mm; box-sizing:border-box; padding:2mm;
+   display:flex; flex-direction:column; background:white; color:black;
+   font:9pt/1.05 Arial,sans-serif; overflow-wrap:anywhere; }
+ .ticket header { display:flex; align-items:center; justify-content:space-between;
+   height:auto; margin:0; padding:0 0 1mm; border:0; border-bottom:.25mm solid;
+   background:white; color:black; font:bold 6.5pt monospace; letter-spacing:.2mm; }
+ .ticket .bars { width:10mm; height:2.5mm; background:repeating-linear-gradient(90deg,#000 0 1px,transparent 1px 3px); print-color-adjust:exact; }
+ .ticketbody { flex:1; display:grid; grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);
+   align-items:center; gap:1.5mm; padding:1mm 0; }
+ .ticket .model { font-size:13pt; font-weight:bold; }
+ .ticket .color { margin:.8mm 0; font-size:9pt; }
+ .ticket .bigsize { font-size:13pt; line-height:1; }
+ .ticket .sign { align-self:stretch; border-left:.25mm dashed; padding-left:1.5mm;
+   display:flex; flex-direction:column; justify-content:space-evenly; font-size:7pt; }
+ .ticket .line { height:3.5mm; border-bottom:.25mm solid; }
+ .ticket .ref { border-top:.25mm solid; margin:0; padding-top:1mm; font:7pt/1.1 Arial,sans-serif; }
+ .ticket.compact .model, .ticket.compact .color { font-size:6.8pt; }
+ .ticket.compact .ref { font-size:6pt; }
+ @media print {
+   html, body { margin:0; padding:0; background:white; }
+   body>aside, body>main, body>button { display:none; }
+   #printArea, .sheet { display:block; }
+   .sheet>.ticket { break-inside:avoid; }
+   .sheet>.ticket+.ticket { break-before:page; }
+ }`;
+}
+function setFormat() {
+ labelStyle.textContent = thermalStyles();
+}
+document.querySelectorAll('input[name="height"]').forEach(radio => radio.onchange = setFormat);
+setFormat();
 function sheet(color){return selected().map(n=>ticket(color,n)).join('')}
 $('print').onclick=()=>{if(!$('form').reportValidity())return;$('printArea').innerHTML='<div class="sheet">'+colors.map(sheet).join('')+'</div>';logAction('Запрос печати');window.print()};
 // ZIP with UTF-8 filenames and uncompressed entries (PKWARE APPNOTE).
@@ -79,7 +115,7 @@ const safe=s=>s.replace(/[<>:"/\\|?*\u0000-\u001f]/g,'_').replace(/[. ]+$/g,'').
 $('form').onsubmit=e=>{
  e.preventDefault();if(!colors.length||!sizes.size)return;
  const folder=safe('Заказ '+value('order')+' — отправление '+value('shipment'));
- const files=colors.map((c,i)=>[folder+'/'+(i+1)+' '+safe(c)+'.html','<!doctype html><html lang="ru"><meta charset="utf-8"><title>'+esc(c)+' — '+esc(value('model'))+'</title><style>'+printStyles+'body{margin:10mm}button{margin-bottom:8mm;padding:8px 16px}@media print{body{margin:0}button{display:none}}</style><button onclick="window.print()">Печать</button><div class="sheet">'+sheet(c)+'</div></html>']);
+ const files=colors.map((c,i)=>[folder+'/'+(i+1)+' '+safe(c)+'.html','<!doctype html><html lang="ru"><meta charset="utf-8"><title>'+esc(c)+' — '+esc(value('model'))+'</title><style>'+thermalStyles()+'@media screen{body{margin:5mm;background:#eee}.sheet>.ticket{margin-bottom:3mm}}button{margin-bottom:8mm;padding:8px 16px}@media print{body{margin:0}button{display:none}}</style><button onclick="window.print()">Печать</button><div class="sheet">'+sheet(c)+'</div></html>']);
  const url=URL.createObjectURL(zip(files)),a=document.createElement('a');a.href=url;a.download=folder+'.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  $('message').textContent='Архив подготовлен к скачиванию.';logAction('Скачивание архива');
 };
