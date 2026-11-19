@@ -12,7 +12,7 @@ const icons = {
 };
 document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[el.dataset.icon]+'</svg>');
 const palette={'Тёмно-синий':'#273951','Чёрный':'#292b30','Бежевый':'#cfbca2','Голубой':'#8bc0e3','Красный':'#ce5859'};
-const colors=Object.keys(palette), grid=Array.from({length:15},(_,i)=>38+i*2), sizes=new Set(grid);
+const colors=[], grid=Array.from({length:15},(_,i)=>38+i*2), sizes=new Set();
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const value=id=>$(id).value.trim();
 const selected=()=>grid.filter(n=>sizes.has(n));
@@ -26,7 +26,7 @@ function ticket(color,size){
 function update(){
  const list=selected(), count=list.length*colors.length;
  cursor=Math.max(0,Math.min(cursor,count-1));
- $('sample').innerHTML=count?ticket(colors[Math.floor(cursor/list.length)],list[cursor%list.length]):'<div class="ticket">Выберите цвет и размер</div>';
+ $('sample').innerHTML=count?ticket(colors[Math.floor(cursor/list.length)],list[cursor%list.length]):'<div class="empty-preview">Выберите цвет и размер</div>';
  $('page').textContent=count?(cursor+1)+' из '+count:'0 из 0';
  $('sum').textContent='Цветов: '+colors.length+'   ×   Размеров: '+list.length+'   =   Этикеток: '+count;
  $('prev').disabled=cursor===0;$('next').disabled=cursor>=count-1;
@@ -45,7 +45,7 @@ function addColor(){
  colors.push(name);$('custom').value='';$('message').textContent='';renderColors();
 }
 $('add').onclick=addColor;$('custom').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addColor()}};
-grid.forEach(n=>{const b=document.createElement('button');b.type='button';b.className='size';b.textContent=n;b.setAttribute('aria-pressed',true);b.onclick=()=>{if(sizes.has(n))sizes.delete(n);else sizes.add(n);b.setAttribute('aria-pressed',sizes.has(n));cursor=0;update()};$('sizes').append(b)});
+grid.forEach(n=>{const b=document.createElement('button');b.type='button';b.className='size';b.textContent=n;b.setAttribute('aria-pressed',false);b.onclick=()=>{if(sizes.has(n))sizes.delete(n);else sizes.add(n);b.setAttribute('aria-pressed',sizes.has(n));cursor=0;update()};$('sizes').append(b)});
 ['model','order','shipment'].forEach(id=>{$(id).pattern='.*\\S.*';$(id).oninput=update});
 $('prev').onclick=()=>{cursor--;update()};$('next').onclick=()=>{cursor++;update()};renderColors();
 function logAction(action){
@@ -62,9 +62,10 @@ const labelStyle = document.createElement('style');
 document.head.append(labelStyle);
 function thermalStyles() {
  const height = Number(document.querySelector('input[name="height"]:checked').value);
+ const landscape = height === 80;
  return `
  @page { size: 58mm ${height}mm; margin: 0; }
- .ticket { width:58mm; height:${height}mm; box-sizing:border-box; padding:2mm;
+ .ticket { width:${landscape ? 80 : 58}mm; height:${landscape ? 58 : height}mm; box-sizing:border-box; padding:2mm;
    display:flex; flex-direction:column; background:white; color:black;
    font:9pt/1.05 Arial,sans-serif; overflow-wrap:anywhere; }
  .ticket header { display:flex; align-items:center; justify-content:space-between;
@@ -73,21 +74,22 @@ function thermalStyles() {
  .ticket .bars { width:10mm; height:2.5mm; background:repeating-linear-gradient(90deg,#000 0 1px,transparent 1px 3px); print-color-adjust:exact; }
  .ticketbody { flex:1; display:grid; grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);
    align-items:center; gap:1.5mm; padding:1mm 0; }
- .ticket .model { font-size:13pt; font-weight:bold; }
- .ticket .color { margin:.8mm 0; font-size:9pt; }
- .ticket .bigsize { font-size:13pt; line-height:1; }
+ .ticket .model { font-size:${landscape ? 21 : 16}pt; font-weight:bold; }
+ .ticket .color { margin:.8mm 0; font-size:${landscape ? 16 : 12}pt; font-weight:bold; }
+ .ticket .bigsize { font-size:${landscape ? 22 : 16}pt; line-height:1; }
  .ticket .sign { align-self:stretch; border-left:.25mm dashed; padding-left:1.5mm;
    display:flex; flex-direction:column; justify-content:space-evenly; font-size:7pt; }
  .ticket .line { height:3.5mm; border-bottom:.25mm solid; }
  .ticket .ref { border-top:.25mm solid; margin:0; padding-top:1mm; font:7pt/1.1 Arial,sans-serif; }
- .ticket.compact .model, .ticket.compact .color { font-size:6.8pt; }
+ .ticket.compact .model, .ticket.compact .color { font-size:${height === 40 ? 7.5 : 11}pt; }
  .ticket.compact .ref { font-size:6pt; }
  @media print {
    html, body { margin:0; padding:0; background:white; }
    body>aside, body>main, body>button { display:none; }
    #printArea, .sheet { display:block; }
-   .sheet>.ticket { break-inside:avoid; }
-   .sheet>.ticket+.ticket { break-before:page; }
+   .label-page { width:58mm; height:${height}mm; break-inside:avoid; position:relative; }
+   .label-page+.label-page { break-before:page; }
+   ${landscape ? '.label-page>.ticket { position:absolute; top:0; left:58mm; transform-origin:top left; transform:rotate(90deg); }' : ''}
  }`;
 }
 function setFormat() {
@@ -95,7 +97,7 @@ function setFormat() {
 }
 document.querySelectorAll('input[name="height"]').forEach(radio => radio.onchange = setFormat);
 setFormat();
-function sheet(color){return selected().map(n=>ticket(color,n)).join('')}
+function sheet(color){return selected().map(n=>'<div class="label-page">'+ticket(color,n)+'</div>').join('')}
 $('print').onclick=()=>{if(!$('form').reportValidity())return;$('printArea').innerHTML='<div class="sheet">'+colors.map(sheet).join('')+'</div>';logAction('Запрос печати');window.print()};
 // ZIP with UTF-8 filenames and uncompressed entries (PKWARE APPNOTE).
 function zip(files){
@@ -115,7 +117,7 @@ const safe=s=>s.replace(/[<>:"/\\|?*\u0000-\u001f]/g,'_').replace(/[. ]+$/g,'').
 $('form').onsubmit=e=>{
  e.preventDefault();if(!colors.length||!sizes.size)return;
  const folder=safe('Заказ '+value('order')+' — отправление '+value('shipment'));
- const files=colors.map((c,i)=>[folder+'/'+(i+1)+' '+safe(c)+'.html','<!doctype html><html lang="ru"><meta charset="utf-8"><title>'+esc(c)+' — '+esc(value('model'))+'</title><style>'+thermalStyles()+'@media screen{body{margin:5mm;background:#eee}.sheet>.ticket{margin-bottom:3mm}}button{margin-bottom:8mm;padding:8px 16px}@media print{body{margin:0}button{display:none}}</style><button onclick="window.print()">Печать</button><div class="sheet">'+sheet(c)+'</div></html>']);
+ const files=colors.map((c,i)=>[folder+'/'+(i+1)+' '+safe(c)+'.html','<!doctype html><html lang="ru"><meta charset="utf-8"><title>'+esc(c)+' — '+esc(value('model'))+'</title><style>'+thermalStyles()+'@media screen{body{margin:5mm;background:#eee}.label-page{margin-bottom:3mm}}button{margin-bottom:8mm;padding:8px 16px}@media print{body{margin:0}button{display:none}}</style><button onclick="window.print()">Печать</button><div class="sheet">'+sheet(c)+'</div></html>']);
  const url=URL.createObjectURL(zip(files)),a=document.createElement('a');a.href=url;a.download=folder+'.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  $('message').textContent='Архив подготовлен к скачиванию.';logAction('Скачивание архива');
 };

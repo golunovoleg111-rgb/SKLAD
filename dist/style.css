@@ -6,3 +6,8 @@
 .formats input{width:auto;margin:0;accent-color:#456b28}
 .stage{display:grid;justify-content:center;overflow:auto}
 #sample{width:fit-content;align-self:center;transform:none}
+
+.stage:has(.empty-preview){display:block}
+#sample:has(.empty-preview){width:100%;transform:rotate(-2deg)}
+.empty-preview{padding:15px}
+.formats{display:grid;justify-content:start}
