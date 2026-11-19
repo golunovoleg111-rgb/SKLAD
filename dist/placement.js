@@ -153,10 +153,8 @@
    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF'+bg}};
    cell.border={top:border,bottom:border,left:border,right:border};
   }
-  const width=Math.min(3,plan.length)*5-1;
-  sheet.mergeCells(1,1,1,width);paint(sheet.getCell(1,1),'ПРАВАЯ СТЕНА','CDDEF8',true,23);sheet.getRow(1).height=44;
   plan.forEach((p,i)=>{
-   const row=3+Math.floor(i/3)*9,col=1+i%3*5;
+   const row=1+Math.floor(i/3)*9,col=1+i%3*5;
    sheet.mergeCells(row,col,row,col+3);paint(sheet.getCell(row,col),'Палета №'+p.number,'69E354',true,13);sheet.getRow(row).height=23;
    for(let side=0;side<2;side++){
     const start=col+side*2;sheet.mergeCells(row+1,start,row+1,start+1);paint(sheet.getCell(row+1,start),sides[side],'FFFFFF',true);
