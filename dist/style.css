@@ -11,3 +11,4 @@
 #sample:has(.empty-preview){width:100%;transform:rotate(-2deg)}
 .empty-preview{padding:15px}
 .formats{display:grid;justify-content:start}
+.mode{margin:0 0 18px}.mode .formats{display:flex}#quantities{display:flex;flex-wrap:wrap;gap:10px}#quantities label{width:72px}#quantities input{padding:8px}#download{margin:0 18px 18px;width:calc(100% - 36px)}#sample canvas{display:block;max-width:100%;height:auto}
