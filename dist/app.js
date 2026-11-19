@@ -94,6 +94,8 @@ function logAction(action){
  try{localStorage.setItem('sklad-log',JSON.stringify(events))}catch{$('message').textContent+=' Журнал доступен только до закрытия страницы.'}
 }
 function showHistory(on){
+ $('placement').hidden=true;
+ $('navPlan').classList.remove('active');
  $('history').hidden=!on;$('editor').hidden=on;$('crumb').textContent=on?'Журнал действий':'Этикетки';
  $('navLog').classList.toggle('active',on);$('navForm').classList.toggle('active',!on);$('message').textContent='';
  if(on)$('events').innerHTML=events.length?events.map(e=>'<div class="event"><b>'+esc(e.action)+'</b> · '+esc(e.model)+'<div>Заказ № '+esc(e.order)+' · Отправление '+esc(e.shipment)+' · Этикеток: '+esc(e.count)+'</div><small>'+esc(new Date(e.date).toLocaleString('ru-RU'))+'</small></div>').join(''):'Действий пока нет.';
